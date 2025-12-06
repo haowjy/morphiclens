@@ -1,7 +1,3 @@
-Here’s a focused **User Flow & UX** doc for MorphoLens, with the “WHY” baked into each flow and some mermaid diagrams to visualize things.
-
----
-
 # MorphoLens – User Experience & Agent Flows
 
 ## 1. Big Picture: What the User Actually Feels
@@ -200,7 +196,7 @@ This is the main demo flow.
    * Canvas:
 
      * Original μCT slice.
-     * Overlaid masks (Femur = blue, Tibia = green).
+     * Overlaid masks (Femur = blue, Tibia = green) from **Gemini 2.5 segmentation**.
      * Four key lines:
 
        * Femur width, femur length.
@@ -239,6 +235,7 @@ sequenceDiagram
     participant Ctx as Context Agent
     participant Canvas as Canvas Agent
     participant Meas as Measurement Agent
+    participant Seg as Gemini 2.5 Segmentation
     participant LLM as Gemini 3 Pro
 
     U->>UI: Drop μCT image + "Analyze using Tang indices"
@@ -248,8 +245,8 @@ sequenceDiagram
     Ctx-->>OA: Tang indices, thresholds, anatomical rules
 
     OA->>Canvas: segmentBones(image, "femur, tibia")
-    Canvas->>SAM3: Call SAM3 API with prompts & hints
-    SAM3-->>Canvas: Femur & Tibia masks
+    Canvas->>Seg: Call Gemini 2.5 Flash with segmentation prompt
+    Seg-->>Canvas: Femur & Tibia masks
     Canvas-->>OA: Mask IDs + rough geometry
 
     OA->>Meas: computeTangIndices(masks, voxelSize, rules)
@@ -266,13 +263,13 @@ sequenceDiagram
 
 * For the user, the steps collapse to: “Upload image → describe desired analysis.”
   No more hunting in menus or rewriting the paper’s geometry math.
-* For judges, it clearly shows **agentic behavior**: the orchestrator agent chooses tools (segmentation, measurement, LLM) and wires them together automatically.
+* For judges, it clearly shows **agentic behavior**: the orchestrator agent chooses tools (segmentation via Gemini 2.5, measurement, LLM via Gemini 3 Pro) and wires them together automatically.
 
 ---
 
 ## 5. Flow C – Interactive Segmentation & Manual Refinement
 
-This is where “point prompts” and bounding boxes come in.
+This is where refinement and “nudge the model” come in.
 
 ### 5.1 User story
 
@@ -296,16 +293,16 @@ Steps:
 
    * User can:
 
-     * Click *positive point* inside missing region.
-     * Draw a bounding box around problem region.
-     * Or mark *negative points* where segmentation bled into soft tissue.
+     * Draw a small bounding box around the problem region, or
+     * Click to mark the area where segmentation is missing / overextended.
 
-4. **Agent updates SAM prompts**
+4. **Agent updates Gemini 2.5 prompt**
 
    * Canvas Agent:
 
-     * Sends existing mask + new positive/negative points or box back to SAM3.
-     * Receives updated mask.
+     * Crops or highlights the selected region.
+     * Sends a new request to **Gemini 2.5 Flash** with an updated, more specific segmentation prompt for that region (for example, “Within this cropped region, segment the osteophyte along the tibial plateau.”).
+     * Receives updated mask(s).
      * Updates the overlay in real time.
 
 5. **Re-run measurements**
@@ -318,10 +315,10 @@ Steps:
 
 ```mermaid
 flowchart TD
-    A[User toggles Refine Mode] --> B[User adds points / box on canvas]
+    A[User toggles Refine Mode] --> B[User draws box / clicks region]
     B --> C[Canvas Agent collects geometry edits]
-    C --> D["Build SAM3 prompt (mask + points/box)"]
-    D --> E[Call SAM3 API refine endpoint]
+    C --> D["Build Gemini 2.5 prompt (crop + instructions)"]
+    D --> E[Call Gemini 2.5 Flash segmentation]
     E --> F["Receive updated mask(s)"]
     F --> G["Update canvas layers & overlay"]
     G --> H["Optionally trigger re-measurement"]
@@ -330,7 +327,7 @@ flowchart TD
 **Why this is better**
 
 * Mirrors **human-in-the-loop segmentation** workflows where users guide a model rather than doing everything manually.
-* Unlike static ImageJ macros, the interaction is *live* and *visual*: click, see model react, recompute measurements.
+* Unlike static ImageJ macros, the interaction is *live* and *visual*: adjust region, see model react, recompute measurements.
 
 ---
 
@@ -391,7 +388,7 @@ sequenceDiagram
 
     UI->>OA: Batch analysis request
     OA->>Batch: For each image, run single-image Tang OA flow
-    Batch->>Canvas: Segment each image (may be headless)
+    Batch->>Canvas: Segment each image (may be headless via Gemini 2.5)
     Batch->>Meas: Compute metrics per image
     Batch-->>OA: Aggregated metrics by sample & group
 
@@ -439,8 +436,8 @@ sequenceDiagram
    * Owns:
 
      * The image layer model.
-     * Segmentation via SAM3.
-     * Point/box prompts and mask updates.
+     * Segmentation via **Gemini 2.5 Flash**.
+     * Region selection / refinement.
    * Provides:
 
      * Mask IDs and geometry to other agents.
@@ -480,7 +477,7 @@ flowchart LR
     subgraph Agents
       OA[Orchestrator Agent]
       Ctx[Context Agent]
-      CV[Canvas Agent<br/>+ SAM3]
+      CV[Canvas Agent<br/>+ Gemini 2.5 segmentation]
       M[Measurement Agent]
       LLM[Gemini 3 Pro]
     end
@@ -513,15 +510,13 @@ flowchart LR
   → Agent extracts and formalizes measurement workflows (e.g., Tang OA).
 
 * **Analysis Mode – Single Image**:
-  Upload an image → ask for Tang OA analysis → see segmentation, measurements, and explanation → tweak & rerun.
+  Upload an image → ask for Tang OA analysis → **Gemini 2.5** segments bones → measurements computed → **Gemini 3 Pro** explains.
 
 * **Analysis Mode – Interactive Segmentation**:
-  Use point prompts and bounding boxes on the canvas to guide SAM3; recompute metrics as needed.
+  Use simple region selection (boxes / clicks) on the canvas to guide **Gemini 2.5** to re-segment; recompute metrics as needed.
 
 * **Analysis Mode – Cohort Comparison**:
   Upload multiple images with group labels → ask for batch Tang OA analysis → get a table and narrative summary.
 
 * **Agent Flows**:
-  One chat “brain” orchestrates context, segmentation, measurement, and interpretation agents for you.
-
-If you want, next we can zoom in on **microcopy & screen states** (what exact text appears on buttons, the minimal set of modes in the Canvas, etc.), or design a **scripted demo run** where we list every click and line of dialogue for the hackathon video.
+  One chat “brain” orchestrates context, segmentation (Gemini 2.5), measurement, and interpretation (Gemini 3 Pro) for you.

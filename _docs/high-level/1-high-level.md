@@ -1,8 +1,8 @@
-# MorphoLens – High-Level Story & Agentic Capabilities
+# MorphoLens – High-Level Overview
 
 ## 1. One-Sentence Pitch
 
-> **MorphoLens** is an *agentic morphometry copilot* for biomedical researchers: you describe an analysis in chat (“use Tang’s μCT OA indices on this knee and compare to my GM-/- cohort”), and it orchestrates segmentation, geometric measurements, and scientific interpretation across your images, papers, and past data—directly in the browser.
+**MorphoLens is an agentic morphometry copilot for biomedical researchers**: you talk to it about your slides and protocols, and it uses Gemini 3 Pro + Gemini Robotics to segment structures, measure them, and interpret the results in context of your experiments—right inside an AI Studio app.
 
 ---
 
@@ -10,259 +10,247 @@
 
 ### 2.1 The real-world pain
 
-A bone biologist wants to quantify OA severity in mouse knees:
+A researcher wants to quantify changes in tissue:
 
-* They scan joints with **μCT**.
-* Then they spend hours in **Amira / ImageJ**:
+* They have **histology slides or μCT images**.
+* They open ImageJ / QuPath / other tools and:
 
-  * Manually segmenting bones (thresholds, watershed),
-  * Placing tiny ruler endpoints on anatomical landmarks,
-  * Copying distances into Excel to compute ratios (e.g., distal femoral width/length, tibial IIOC height/width, as in Tang et al.).
-* Every new student has to relearn this dance. It’s slow, brittle, and deeply non-agentic.
+  * Manually outline regions of interest.
+  * Measure widths, areas, or ratios.
+  * Copy numbers into spreadsheets.
+* Every new person has to relearn this slow, click-heavy workflow.
+  Much of the *knowledge* (what to measure, how to interpret it) lives in **papers and protocols**, while the *work* lives in **pixels and Excel**.
 
-The *brain* of the analysis lives in papers and protocols; the *work* lives in clicking and spreadsheets.
+This doesn’t scale well when you have lots of slides, multiple cohorts, and evolving protocols.
 
 ### 2.2 The opportunity
 
-Modern LLMs (like **Gemini 3 Pro**) can:
+Modern Gemini models can:
 
-* Read **papers and protocols**,
-* Understand **images**,
-* Reason about **numbers and tables**,
-* And call tools (APIs, functions) in an *agentic* way.
+* Read **protocols and papers**.
+* Understand **images**.
+* Reason over **numbers and tables**.
+* Call tools in an **agentic**, multi-step way.
+
+Gemini Robotics adds **promptable segmentation**: with a single natural language description, it can produce masks for structures in an image.
 
 MorphoLens asks:
-**What if the morphometry workflow itself became a conversational agent?**
 
-* You give it:
+> *What if slide morphometry itself became a conversation with an agent that understands your protocol, your images, and your data?*
 
-  * Your Tang OA paper / protocol,
-  * A few μCT images,
-  * Some past CSVs.
-* Then you talk to it like you would to a sharp postdoc:
+Instead of:
+“Draw boxes on the lateral compartment and type ratios into Excel.”
 
-  * “Analyze these knees with Tang’s indices.”
-  * “Is my GM-/- mouse protected?”
-  * “How do these 28-month-old mice compare to our 10-month controls?”
+You say:
 
-And instead of just answering in words, it:
+> “Using Tang’s OA protocol, analyze this joint and tell me how this GM-/- mouse compares to my WT cohort.”
 
-* Segments bones,
-* Places measurements,
-* Computes indices,
-* Writes back an explanation *anchored in the literature and your data*.
+And the system:
 
-That’s the core innovation: **chat → agentic capabilities → live morphometry.**
+* Reads the protocol,
+* Segments the relevant regions using Gemini Robotics,
+* Places measurement overlays,
+* Computes the indices,
+* And explains **what those numbers mean** in the language of your experiment.
 
 ---
 
-## 3. Vision (WHAT we’re building)
+## 3. What Is MorphoLens? (WHAT)
 
-### 3.1 Core experience
+MorphoLens is a **browser-based AI Studio app** with three main ideas:
 
-A **browser-based agentic workspace** with three key surfaces:
+1. **Protocol-aware context**
 
-1. **Context Panel (“Plan Mode”)**
+   * Upload key PDFs (e.g., Tang OA paper, lab SOPs).
+   * Upload simple CSVs of past experiments (group labels, metrics).
+   * MorphoLens learns:
 
-   * Drag in PDFs (Tang OA, lab SOPs).
-   * Drag in past CSVs (previous OA experiments).
-   * MorphoLens “reads” this context and remembers key indices, thresholds, and group definitions.
+     * Which indices matter,
+     * Typical “normal vs diseased” ranges,
+     * How cohorts are defined (e.g., WT vs GM-/-).
 
-2. **Chat Panel (Brain / Orchestrator)**
+2. **Interactive slide workspace**
 
-   * Conversation with an OA-aware assistant powered by Gemini 3 Pro.
-   * You give high-level instructions:
+   * Drop in a slide image (histology or μCT).
+   * The app uses **Gemini Robotics** to segment named structures from a prompt (e.g., “lateral meniscus, medial meniscus, growth plate cartilage, tibial plateau…”).
+   * It overlays masks and simple measurement lines on top of the image.
+   * You can drag measurement lines to correct landmarks; metrics update instantly.
 
-     * “Using the Tang OA paper I uploaded, quantify OA severity on this μCT image.”
-     * “Compare this GM-/- MMS mouse to my WT group at 8 weeks.”
-   * The agent:
+3. **Conversational reasoning**
 
-     * Decides when to segment, when to measure, when to summarize, when to ask for clarification.
+   * A chat panel powered by **Gemini 3 Pro** orchestrates the workflow:
 
-3. **Canvas Panel (Action Surface)**
+     * Decides which structures to segment and which indices to compute based on the protocol.
+     * Reads the new measurements and your CSV cohorts.
+     * Explains the results:
 
-   * When you send an image (μCT slice / screenshot from Amira), it opens in a right-side canvas:
+       * “Femoral W/L is elevated relative to your control mean; tibial H/W is decreased; this pattern is OA-like and GM-/- appears partially protected.”
 
-     * Shows the original image,
-     * Overlays bone segmentations and measurement lines,
-     * Displays a small metrics table underneath (distances and ratios).
-
-> For the demo: most of the time you’ll show **Chat + Canvas**, with the Context Panel collapsed after the initial setup.
-
-### 3.2 The “Hero” Tang OA flow
-
-The main story the judges see:
-
-1. **Setup**
-
-   * Upload Tang’s μCT OA paper (or protocol) into the Context Panel.
-   * Upload a simple CSV of a previous experiment (WT vs GM-/-, MMS vs control).
-
-2. **Ask**
-
-   * Drag a μCT knee image into chat.
-   * Type:
-
-     > “Using Tang’s geometric indices, analyze this joint for OA severity and compare it to my GM-/- cohort.”
-
-3. **Agent acts**
-
-   * Reads Tang’s definitions (femur W/L, tibial IIOC H/W).
-   * Calls the segmentation tool (SAM3) to extract femur and tibia contours.
-   * Places geometric landmarks (condyle edges, groove midpoint, IIOC height).
-   * Computes:
-
-     * Femur width, femur length, W/L ratio.
-     * Tibial width, tibial IIOC height, H/W ratio.
-
-4. **Agent shows**
-
-   * Canvas:
-
-     * Original image + overlayed masks.
-     * Lines showing femur width & length, tibial height & width.
-     * Live metrics table (actual numbers).
-   * Chat:
-
-     * A short explanation referencing Tang’s thresholds:
-
-       * “Distal femoral W/L = 1.33 (>1.30 OA-like).”
-       * “Tibial IIOC H/W = 0.25 (<0.28 OA-like).”
-       * “This pattern matches severe PTOA in WT mice in your protocol. Your GM-/- group shows lower W/L and higher H/W ratios, consistent with partial protection.”
-
-5. **You refine**
-
-   * You nudge a measurement line endpoint on the canvas.
-   * Metrics update instantly.
-   * You ask: “Reinterpret with the corrected width, please,” and chat updates the narrative.
-
-That’s the **wow**: the agent isn’t just chatting about OA; it’s *doing* OA morphometry with you.
+The **core experience** is:
+**talk → segment → measure → interpret**, in a loop.
 
 ---
 
-## 4. Functional Goals (for the Hackathon)
+## 4. Hero Demo: Tang OA Use Case
 
-### 4.1 Must-have for the demo spine
+For the hackathon, we focus on one well-defined story:
 
-1. **Context ingestion**
+1. **Context setup**
 
-   * Upload at least one Tang-like OA PDF.
-   * Upload at least one CSV of past OA data.
+   * Upload the Tang OA paper.
+   * Upload a CSV summarizing a previous experiment (WT vs GM-/-, treatment vs control).
+
+2. **Single-image analysis**
+
+   * Upload a mouse knee slide image.
+   * MorphoLens:
+
+     * Uses Gemini Robotics to detect and segment relevant structures.
+     * Draws overlays and measurement lines (e.g., femoral width/length, tibial indices).
+     * Computes Tang-style ratios.
+     * Uses Gemini 3 Pro to classify the joint as more OA-like or control-like, referencing the protocol and your cohort data.
+
+3. **Human refinement**
+
+   * You tweak a measurement line.
+   * Numbers update.
+   * You ask: “Reinterpret with the corrected femur width.”
+   * The agent updates its explanation accordingly.
+
+This showcases the **agentic loop** without requiring pixel-perfect medical segmentation: Gemini Robotics gives a strong first guess; the human + measurements make it precise enough for the story.
+
+---
+
+## 5. Functional Requirements
+
+### 5.1 Must-have (for the hackathon demo)
+
+1. **Protocol & data ingestion**
+
+   * Upload at least one OA-style PDF.
+   * Upload at least one CSV of past experiments.
    * Chat can answer:
 
-     * “Which geometric indices does this paper use to define OA severity?”
-     * “What thresholds separate normal vs OA in this protocol?” (even if partially curated).
+     * “Which indices does this protocol use?”
+     * “Roughly what values are OA-like vs normal in this dataset?”
 
-2. **Single-image Tang OA analysis**
+2. **Prompt-based segmentation with Gemini Robotics**
 
-   * Upload a μCT-ish knee image.
-   * The app:
+   * Given a slide image and a fixed prompt (for a small set of anatomical structures), the app:
 
-     * Shows it on the canvas.
-     * Runs a real segmentation pipeline (SAM3 or a constrained heuristic).
-     * Places landmarks and computes:
+     * Calls the **Gemini Robotics model**.
+     * Receives masks / bounding boxes and labels for those structures.
+     * Draws overlays on the image.
 
-       * Distal femur width, length, W/L.
-       * Tibial IIOC height, width, H/W.
-   * Displays:
+3. **Measurement overlay & basic morphometry**
 
-     * Overlays on the canvas,
-     * A metrics table under the image.
+   * The user can see:
 
-3. **Gemini interpretation of metrics**
+     * The image,
+     * Overlaid masks,
+     * Measurement lines for 1–3 indices (e.g., femur W/L, tibial ratios).
+   * Metrics table shows the computed values.
 
-   * Chat sees:
+4. **Gemini-driven interpretation**
 
-     * The paper context,
-     * The metrics JSON,
-     * (Optionally) an overlay screenshot.
-   * It responds with:
+   * Given:
 
-     * A classification (e.g., “OA-like vs control-like”),
-     * Citations to specific indices and their thresholds,
-     * A short explanation comparing to the uploaded CSV.
+     * Protocol context,
+     * Measured metrics,
+     * CSV cohort summary,
+   * Chat produces a short, literate interpretation:
 
-4. **Light human-in-the-loop**
+     * Classification (e.g., OA-like vs control-like),
+     * Basic comparison to relevant cohort,
+     * Clear reference to which indices / thresholds it used.
 
-   * At minimum:
+5. **Light human-in-the-loop**
 
-     * You can drag a measurement line and recompute numbers.
-   * The demo can show:
+   * The user can adjust at least one measurement line and request a re-interpretation.
+   * The app clearly responds to this change in both numbers and narrative.
 
-     * “I corrected the femur width slightly; the ratio dropped but still sits in the OA range.”
+### 5.2 Nice-to-have / Stretch
 
-### 4.2 Nice-to-have (if time permits)
+6. **Multiple regions or structures**
 
-5. **Tang OA preset**
+   * Support more than one key structure per image (e.g., both lateral and medial compartments, or meniscus + growth plate).
 
-   * A preset button that:
+7. **Mini experiment view**
 
-     * Names the indices (Femur W/L, Tibia H/W),
-     * Shows a tiny legend (normal vs OA band),
-     * Applies this measurement recipe to any new image you feed it.
+   * Allow a small table with multiple images:
 
-6. **Mini experiment table**
+     * One row per sample,
+     * Columns for the main indices,
+     * Chat can summarize group differences.
 
-   * Let the user:
+8. **Protocol presets**
 
-     * Add multiple samples (WT, GM-/-, aged).
-     * See rows of indices.
-   * Have chat:
+   * A “Tang OA preset” that:
 
-     * Summarize group differences,
-     * Suggest simple interpretations.
+     * Names the indices and structures,
+     * Provides a mini legend (e.g., normal vs OA ranges),
+     * Auto-configures the segmentation prompt.
 
 ---
 
-## 5. Non-Functional Goals (for this weekend)
+## 6. Non-Functional Requirements
 
-We keep these minimal and pragmatic:
+For this submission we keep non-functional goals pragmatic and demo-oriented:
 
-* **Browser-first**
+1. **AI Studio–first**
 
-  * The entire demo runs in a browser (using AI Studio + front-end code).
-  * Heavy lifting:
+   * The whole experience runs as an **AI Studio app**:
 
-    * Gemini for reasoning & multimodality,
-    * SAM3 API for segmentation,
-    * Simple JS (or Pyodide later) for geometry.
+     * Gemini 3 Pro for chat + reasoning.
+     * Gemini Robotics for segmentation.
+   * No external ML stack is required.
 
-* **Demo-stable**
+2. **Demo stability**
 
-  * The Tang OA path (one or a few curated images) must work consistently:
+   * The Tang OA flow should work reliably on:
 
-    * No brittle multi-step flows,
-    * Clear loading states and error messages.
+     * A small set of curated images,
+     * A reasonable internet connection.
+   * Clear loading and error states:
 
-* **Obvious wow**
+     * If segmentation fails, the app tells the user and degrades gracefully.
 
-  * From a judge’s point of view, it should be crystal-clear that:
+3. **Understandability**
 
-    * The app is using Gemini to read real text (paper/protocol),
-    * Understand real images (μCT slice),
-    * Compute real numbers (indices),
-    * And tie them together in a scientific explanation.
+   * The UI should make it obvious what is happening:
+
+     * Which structures were segmented,
+     * What numbers were computed,
+     * How the interpretation connects to the protocol and CSV.
+
+4. **Extensibility**
+
+   * The design should clearly suggest that:
+
+     * You can swap in other protocols (e.g., fibrosis scoring),
+     * You can adapt to other modalities (histology, fluorescence, μCT),
+     * You could later plug in specialist medical segmenters (e.g., SAM-style models) without changing the core interaction pattern.
 
 ---
 
-## 6. Future Directions (where “Trust by Visibility” lives)
+## 7. Goals vs Reach
 
-We *won’t* emphasize this in the hackathon demo, but it’s nice to mention in the writeup as **future work**:
+### Core Goals (what *must* be true by submission)
 
-* **Versioned measurement recipes**
+* Tell a clear **story**:
+  Agentic, conversational morphometry that ties together **protocol → segmentation → measurement → interpretation**.
+* Show a **working demo**:
 
-  * Tang OA as `tang_oa_v1.0`, with full provenance.
-* **Deeper trust/visibility**
+  * Real slide image,
+  * Real segmentation via Gemini Robotics,
+  * Real numbers computed from the image,
+  * Real explanation grounded in protocol and CSV.
+* Keep it **self-contained in AI Studio**.
 
-  * Click an index → see formula + landmarks + mask.
-  * Export JSON recipes + logs for full reproducibility.
-* **Benchmarking**
+### Reach Goals (great if we have time)
 
-  * Compare MorphoLens indices to manual Amira measurements across multiple raters.
-* **More agent specializations**
+* More polished multi-image experiment view (small table + cohort summary).
+* More sophisticated indices (beyond simple widths / heights).
+* Simple export (CSV or screenshot of overlays).
+* Early hooks for future external segmenters (e.g., SAM-based API) to illustrate the longer-term roadmap.
 
-  * Separate “canvas agent” (segmentation + prompts),
-  * “image-calc agent” (geometry & stats),
-  * “insight agent” (study design & interpretation).
-
-These are great to talk about as **next steps**, not something you need to fully implement or show to win *this* weekend.

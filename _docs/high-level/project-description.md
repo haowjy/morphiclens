@@ -1,0 +1,7 @@
+MorphoLens is an agentic morphometry copilot for biomedical researchers working with image-based assays. Instead of manually segmenting structures, placing rulers, and copying numbers into spreadsheets, scientists describe the analysis they want in natural language and let Gemini 3 Pro orchestrate the workflow end-to-end.
+
+MorphoLens reads protocols and papers, understands images, calls segmentation tools, computes geometric or intensity-based metrics, and explains the results in the language of the experiment. The same pattern applies to μCT, histology, fluorescence microscopy, or any protocol-driven image analysis pipeline.
+
+In our current prototype, we focus on μCT-based osteoarthritis scoring in mouse knees as a concrete testbed: MorphoLens recovers literature-defined indices, drives a segmentation model, overlays editable measurements directly on the image in the browser, and reasons about the resulting metrics in the context of prior experiments.
+
+By turning protocol text, images, and tabular data into a single conversational loop, MorphoLens aims to make biomedical image analysis more reproducible, explainable, and accessible—so researchers spend less time babysitting GUIs and more time thinking about biology.

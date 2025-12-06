@@ -52,12 +52,12 @@ Vibe Code with your voice
 App Gallery in AI Studio for inspiration
 AI Studio Build uses Gemini 3 Pro Preview by default, so just go to the Build tab and get started!
 
-Submission Requirements
+# Submission Requirements
 Please read carefully. Projects that do not follow these formatting rules will not be eligible for prizes.
 
 A valid submission must contain a Kaggle Writeup, which includes:
 
-Kaggle Writeup
+## Kaggle Writeup
 Attached Video Demo
 Attached Public AI Studio App Link
 To create a new Writeup, click on the "New Writeup" button here. After you have saved your Writeup, you should see a "Submit" button in the top right corner.
