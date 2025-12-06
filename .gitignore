@@ -1,0 +1,4 @@
+_docs/hidden/**/*
+.DS_Store
+
+.gemini/
