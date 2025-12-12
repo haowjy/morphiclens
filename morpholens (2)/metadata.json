@@ -1,0 +1,5 @@
+{
+  "name": "MorphoLens",
+  "description": "An agent-first workspace for human-in-the-loop morphometry and scientific analysis, featuring a 3-pane layout and Gemini integration.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,26 @@
+{
+  "id": "biomedical",
+  "name": "MorphoLens (Bio)",
+  "description": "Advanced biomedical image analysis and annotation.",
+  "version": "1.0.0",
+  "packages": [
+    "micropip",
+    "numpy",
+    "pandas",
+    "opencv-python",
+    "Pillow",
+    "matplotlib",
+    "scikit-learn",
+    "scipy",
+    "scikit-image"
+  ],
+  "helpers": [
+    "mlens.py"
+  ],
+  "artifactTypes": [
+    "image",
+    "layer",
+    "data"
+  ],
+  "thinkingBudget": 32768
+}

@@ -1,0 +1,25 @@
+{
+  "id": "geo-oa",
+  "name": "uCT OA Analyzer (Tang Protocol)",
+  "description": "Geometric indices for osteoarthritis evaluation in murine uCT images using the Tang/Yao protocol.",
+  "version": "1.0.0",
+  "packages": [
+    "micropip",
+    "numpy",
+    "pandas",
+    "opencv-python",
+    "Pillow",
+    "matplotlib",
+    "scipy",
+    "scikit-image"
+  ],
+  "helpers": [
+    "geo_oa.py"
+  ],
+  "artifactTypes": [
+    "image",
+    "layer",
+    "data"
+  ],
+  "thinkingBudget": 32768
+}
